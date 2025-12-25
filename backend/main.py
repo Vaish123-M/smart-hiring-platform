@@ -1,11 +1,10 @@
 from fastapi import FastAPI
+from auth.router import router as auth_router
 
-app = FastAPI(
-    title="Smart Hiring Platform",
-    description="AI-driven ATS & Talent Intelligence System",
-    version="1.0.0"
-)
+app = FastAPI(title="Smart Hiring Platform")
+
+app.include_router(auth_router)
 
 @app.get("/")
-def root():
+def home():
     return {"status": "Smart Hiring Platform API running"}

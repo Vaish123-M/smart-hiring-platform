@@ -12,3 +12,27 @@ JD–Resume matching, hiring analytics, and secure cloud deployment.
 
 ## Status
 🚧 In active development (Final-Year Level Project)
+
+## Backend Quick Start (Windows)
+
+1. Create and activate a virtual environment:
+
+```
+python -m venv venv
+./venv/Scripts/Activate.ps1
+```
+
+2. Install backend dependencies:
+
+```
+pip install -r backend/requirements.txt
+```
+
+3. Run the API server:
+
+```
+cd backend
+uvicorn main:app --reload
+```
+
+The API will be available at http://127.0.0.1:8000.
