@@ -1,4 +1,11 @@
-# Smart Hiring Platform - Backend Entry Point
+from fastapi import FastAPI
 
-if __name__ == "__main__":
-    print("Smart Hiring Platform Backend")
+app = FastAPI(
+    title="Smart Hiring Platform",
+    description="AI-driven ATS & Talent Intelligence System",
+    version="1.0.0"
+)
+
+@app.get("/")
+def root():
+    return {"status": "Smart Hiring Platform API running"}
