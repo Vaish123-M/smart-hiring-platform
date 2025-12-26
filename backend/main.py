@@ -2,12 +2,13 @@ from fastapi import FastAPI
 from auth.router import router as auth_router
 from resume.router import router as resume_router
 from matching.router import router as ats_router
-
+from analytics.router import router as analytics_router
 app = FastAPI(title="Smart Hiring Platform")
 
 app.include_router(auth_router)
 app.include_router(resume_router)
 app.include_router(ats_router)
+app.include_router(analytics_router)
 
 @app.get("/")
 def home():
