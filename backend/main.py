@@ -15,24 +15,19 @@ app.include_router(resume_router)
 app.include_router(ats_router)
 app.include_router(analytics_router)
 
-# Mount static files from React build
-static_dir = os.path.join(os.path.dirname(__file__), "../frontend/dist")
-if os.path.exists(static_dir):
-    app.mount("/assets", StaticFiles(directory=os.path.join(static_dir, "assets")), name="assets")
-
-# Static assets for custom Swagger styling
+# Define directories
+ai_frontend_dist = os.path.join(os.path.dirname(__file__), "../ai-resume-frontend/dist")
 swagger_static_dir = os.path.join(os.path.dirname(__file__), "static")
+
+# Mount static assets for frontend
+if os.path.exists(ai_frontend_dist):
+    assets_dir = os.path.join(ai_frontend_dist, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+# Mount static assets for swagger/docs
 if os.path.exists(swagger_static_dir):
     app.mount("/static", StaticFiles(directory=swagger_static_dir), name="static")
-
-@app.get("/")
-async def serve_frontend():
-    """Serve the React frontend"""
-    index_path = os.path.join(static_dir, "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
-    return {"status": "Smart Hiring Platform API running"}
-
 
 @app.get("/swagger", include_in_schema=False)
 async def custom_swagger_ui():
@@ -53,3 +48,26 @@ async def marketing_docs():
     if os.path.exists(docs_index):
         return FileResponse(docs_index)
     return {"message": "Docs UI not found"}
+
+
+@app.get("/")
+async def serve_frontend_index():
+    """Serve the React frontend index"""
+    index_path = os.path.join(ai_frontend_dist, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {"status": "AI Resume Analyzer API running"}
+
+
+@app.get("/{full_path:path}")
+async def serve_spa(full_path: str):
+    """Catch-all route to serve SPA - redirects to index.html for any non-API routes"""
+    # Don't catch API routes
+    if full_path.startswith(("upload-resume", "skill-count", "swagger", "docs", "openapi.json", "assets", "static")):
+        return {"error": "Not found"}
+    
+    # Serve index.html for all other routes (SPA routing)
+    index_path = os.path.join(ai_frontend_dist, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {"error": "Not found"}

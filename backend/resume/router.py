@@ -82,6 +82,7 @@ async def upload_resume(file: UploadFile = File(...)):
                 "message": "Resume uploaded and parsed successfully",
                 "filename": file.filename,
                 "resume_id": str(result.inserted_id),
+                "resume_text": raw_text,
                 "text_length": len(raw_text),
                 "cleaned_length": len(cleaned_text)
             }
