@@ -1,130 +1,242 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ResumeUpload from './components/ResumeUpload';
 import SkillDisplay from './components/SkillDisplay';
+import ATSScoreDisplay from './components/ATSScoreDisplay';
+import SkillFilterSort from './components/SkillFilterSort';
+import ResumeExport from './components/ResumeExport';
+import ResumeDashboard from './components/ResumeDashboard';
 import { uploadResume, extractSkillsFromResume } from './api/resumeApi';
+import { Settings, Home, History, DownloadCloud, RefreshCw } from 'lucide-react';
 import './index.css';
 
 function App() {
+  const [currentPage, setCurrentPage] = useState('home');
   const [skills, setSkills] = useState(null);
+  const [resumeText, setResumeText] = useState('');
   const [resumeFilename, setResumeFilename] = useState('');
+  const [resumeId, setResumeId] = useState('');
   const [error, setError] = useState('');
+  const [filteredSkills, setFilteredSkills] = useState(null);
 
   const handleUpload = async (file) => {
     try {
       setError('');
       setSkills(null);
+      setFilteredSkills(null);
       
-      // Upload resume to backend
       const uploadResponse = await uploadResume(file);
+      const resumeTextData = uploadResponse.resume_text;
       
-      // Extract the resume text
-      const resumeText = uploadResponse.resume_text;
-      
-      if (!resumeText) {
+      if (!resumeTextData) {
         throw new Error('Resume text not found in response');
       }
 
-      // Extract skills from the resume text
-      const skillsData = await extractSkillsFromResume(resumeText);
-      
+      setResumeText(resumeTextData);
+      setResumeFilename(uploadResponse.filename);
+      setResumeId(uploadResponse.resume_id);
+
+      const skillsData = await extractSkillsFromResume(resumeTextData);
       setSkills(skillsData);
-      setResumeFilename(file.name);
+      setFilteredSkills(skillsData);
+
+      // Save to localStorage
+      const resumeHistory = JSON.parse(localStorage.getItem('resumeHistory') || '[]');
+      resumeHistory.unshift({
+        id: uploadResponse.resume_id,
+        filename: uploadResponse.filename,
+        text: resumeTextData,
+        skills: skillsData,
+        uploadedAt: new Date().toISOString(),
+        atsScore: calculateATSScore(skillsData)
+      });
+      localStorage.setItem('resumeHistory', JSON.stringify(resumeHistory.slice(0, 20)));
+
+      setCurrentPage('analyze');
     } catch (err) {
-      console.error('Upload error:', err);
-      const errorMessage = err.response?.data?.detail || err.response?.data?.message || err.message || 'Failed to process resume';
+      const errorMessage = err.response?.data?.detail || err.message || 'Failed to process resume';
       setError(errorMessage);
-      throw new Error(errorMessage);
     }
+  };
+
+  const calculateATSScore = (skillsData) => {
+    if (!skillsData || typeof skillsData !== 'object') return 0;
+    const skillCount = Object.keys(skillsData).length;
+    const avgFreq = skillCount > 0 
+      ? Object.values(skillsData).reduce((a, b) => a + b, 0) / skillCount 
+      : 0;
+    return Math.min(10, (skillCount / 5 + avgFreq / 3) * 3);
+  };
+
+  const handleSelectResume = (resume) => {
+    setResumeText(resume.text);
+    setResumeFilename(resume.filename);
+    setResumeId(resume.id);
+    setSkills(resume.skills);
+    setFilteredSkills(resume.skills);
+    setCurrentPage('analyze');
+  };
+
+  const handleFilterApply = (filtered) => {
+    setFilteredSkills(filtered);
   };
 
   const handleReset = () => {
     setSkills(null);
+    setFilteredSkills(null);
+    setResumeText('');
     setResumeFilename('');
+    setResumeId('');
     setError('');
+    setCurrentPage('home');
   };
 
   return (
-    <div className="min-h-screen py-12 px-4">
-      {/* Header */}
-      <header className="text-center mb-12">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary-500 to-cyan-500 mb-6 shadow-2xl">
-          <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      {/* Navigation */}
+      <nav className="bg-white shadow-sm sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <h1 
+              className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition"
+              onClick={() => handleReset()}
+            >
+              📄 Smart Hiring Platform
+            </h1>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => setCurrentPage('home')}
+                className={`flex items-center px-4 py-2 rounded-lg transition ${
+                  currentPage === 'home' 
+                    ? 'bg-indigo-100 text-indigo-700 font-semibold' 
+                    : 'text-gray-600 hover:text-indigo-600'
+                }`}
+              >
+                <Home className="w-4 h-4 mr-2" />
+                Home
+              </button>
+              {skills && (
+                <button
+                  onClick={() => setCurrentPage('analyze')}
+                  className={`flex items-center px-4 py-2 rounded-lg transition ${
+                    currentPage === 'analyze' 
+                      ? 'bg-indigo-100 text-indigo-700 font-semibold' 
+                      : 'text-gray-600 hover:text-indigo-600'
+                  }`}
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Analyze
+                </button>
+              )}
+              <button
+                onClick={() => setCurrentPage('dashboard')}
+                className={`flex items-center px-4 py-2 rounded-lg transition ${
+                  currentPage === 'dashboard' 
+                    ? 'bg-indigo-100 text-indigo-700 font-semibold' 
+                    : 'text-gray-600 hover:text-indigo-600'
+                }`}
+              >
+                <History className="w-4 h-4 mr-2" />
+                History
+              </button>
+            </div>
+          </div>
         </div>
-        <h1 className="text-5xl font-extrabold mb-4 bg-gradient-to-r from-primary-600 to-cyan-600 bg-clip-text text-transparent">
-          AI Resume Analyzer
-        </h1>
-        <p className="text-gray-600 text-lg max-w-2xl mx-auto leading-relaxed">
-          Upload your resume and let our AI extract and analyze all the skills mentioned. 
-          Get instant insights into your skill profile with detailed frequency analysis.
-        </p>
-        <div className="mt-6 flex items-center justify-center space-x-4 text-sm">
-          <div className="flex items-center text-gray-700">
-            <svg className="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            Fast Analysis
-          </div>
-          <div className="flex items-center text-gray-700">
-            <svg className="w-5 h-5 text-blue-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            Secure & Private
-          </div>
-          <div className="flex items-center text-gray-700">
-            <svg className="w-5 h-5 text-purple-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-            </svg>
-            AI-Powered
-          </div>
-        </div>
-      </header>
+      </nav>
 
       {/* Main Content */}
-      <main>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
-          <div className="max-w-2xl mx-auto mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
-            <div className="flex items-center">
-              <svg className="w-6 h-6 text-red-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-              <div>
-                <p className="font-semibold text-red-800">Error</p>
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-start">
+            <span className="mr-3">⚠️</span>
+            <div>
+              <p className="font-semibold">Error</p>
+              <p>{error}</p>
             </div>
           </div>
         )}
 
-        <ResumeUpload onUploadSuccess={handleUpload} />
-
-        {skills && (
+        {/* Home Page */}
+        {currentPage === 'home' && (
           <>
-            <SkillDisplay skills={skills} resumeFilename={resumeFilename} />
-            
-            <div className="text-center mt-8">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-gray-800 mb-4">Welcome to Smart Hiring</h2>
+              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+                Upload your resume to extract skills, calculate ATS score, and get insights instantly.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6 mb-12">
+              <div className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition">
+                <div className="text-4xl mb-4">📊</div>
+                <h3 className="font-semibold text-gray-800 mb-2">Skill Analysis</h3>
+                <p className="text-sm text-gray-600">Extract and analyze skills with frequency counts</p>
+              </div>
+              <div className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition">
+                <div className="text-4xl mb-4">🎯</div>
+                <h3 className="font-semibold text-gray-800 mb-2">ATS Scoring</h3>
+                <p className="text-sm text-gray-600">Get your ATS compatibility score</p>
+              </div>
+              <div className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition">
+                <div className="text-4xl mb-4">📥</div>
+                <h3 className="font-semibold text-gray-800 mb-2">Export Results</h3>
+                <p className="text-sm text-gray-600">Download your analysis as PDF or JSON</p>
+              </div>
+            </div>
+
+            <ResumeUpload onUploadSuccess={handleUpload} />
+          </>
+        )}
+
+        {/* Analyze Page */}
+        {currentPage === 'analyze' && skills && (
+          <div className="space-y-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-800">Analysis Results</h2>
+                <p className="text-gray-600 mt-1">{resumeFilename}</p>
+              </div>
               <button
                 onClick={handleReset}
-                className="inline-flex items-center px-8 py-3 bg-white text-primary-600 font-semibold rounded-lg border-2 border-primary-600 hover:bg-primary-50 transition-all shadow-lg hover:shadow-xl"
+                className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
               >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Analyze Another Resume
+                <RefreshCw className="w-4 h-4 mr-2" />
+                New Resume
               </button>
             </div>
-          </>
+
+            {/* ATS Score Card */}
+            <ATSScoreDisplay 
+              skills={skills} 
+              filename={resumeFilename}
+              atsScore={calculateATSScore(skills)}
+            />
+
+            {/* Skills Display */}
+            <SkillDisplay skills={filteredSkills || skills} resumeFilename={resumeFilename} />
+
+            {/* Filtering & Sorting */}
+            <SkillFilterSort skills={skills} onFilterApply={handleFilterApply} />
+
+            {/* Export */}
+            <ResumeExport 
+              filename={resumeFilename}
+              skills={skills}
+              resumeText={resumeText}
+              atsScore={calculateATSScore(skills)}
+            />
+          </div>
+        )}
+
+        {/* Dashboard Page */}
+        {currentPage === 'dashboard' && (
+          <ResumeDashboard onSelectResume={handleSelectResume} />
         )}
       </main>
 
       {/* Footer */}
-      <footer className="text-center mt-16 pb-8">
-        <div className="inline-block bg-white rounded-xl shadow-lg px-8 py-4 border border-gray-100">
-          <p className="text-gray-600 text-sm">
-            Powered by <span className="font-semibold text-primary-600">FastAPI</span> & 
-            <span className="font-semibold text-cyan-600"> AI Technology</span>
-          </p>
+      <footer className="bg-white border-t mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-gray-600 text-sm">
+          Smart Hiring Platform © 2024 | Built with React & FastAPI
         </div>
       </footer>
     </div>
@@ -132,3 +244,4 @@ function App() {
 }
 
 export default App;
+
