@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.middleware.cors import CORSMiddleware
 import os
 from auth.router import router as auth_router
 from resume.router import router as resume_router
@@ -9,6 +10,15 @@ from matching.router import router as ats_router
 from analytics.router import router as analytics_router
 
 app = FastAPI(title="Smart Hiring Platform", docs_url=None, redoc_url=None)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(auth_router)
 app.include_router(resume_router)

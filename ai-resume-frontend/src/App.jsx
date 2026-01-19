@@ -217,6 +217,11 @@ function App() {
             {/* Filtering & Sorting */}
             <SkillFilterSort skills={skills} onFilterApply={handleFilterApply} />
 
+            {/* Job Description Matcher */}
+            <div className="mt-8">
+              <JobMatcher resumeText={resumeText} />
+            </div>
+
             {/* Export */}
             <ResumeExport 
               filename={resumeFilename}
