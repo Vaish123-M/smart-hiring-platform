@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Loader, AlertCircle, Plus, X, BarChart3 } from 'lucide-react';
+import { Loader, AlertCircle, Plus, X, BarChart3, Target, Trophy } from 'lucide-react';
 
 export default function ResumeComparison() {
   const [resumes, setResumes] = useState([]);
@@ -19,7 +19,7 @@ export default function ResumeComparison() {
       formData.append('file', file);
 
       try {
-        const response = await fetch('/resume/upload', {
+        const response = await fetch('http://localhost:8000/resume/upload', {
           method: 'POST',
           body: formData
         });
@@ -54,11 +54,13 @@ export default function ResumeComparison() {
     setError('');
 
     try {
-      const response = await fetch('/analytics/compare-resumes', {
+      const response = await fetch('http://localhost:8000/analytics-advanced/compare', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          resumes: resumes.map(r => r.text)
+          resume1_text: resumes[0].text,
+          resume2_text: resumes[1].text,
+          job_description: null
         })
       });
 
@@ -135,17 +137,60 @@ export default function ResumeComparison() {
       {/* Comparison Results */}
       {result && (
         <div className="space-y-6 border-t pt-6">
-          {/* Common Skills */}
-          {Object.keys(result.common_skills).length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                Common Skills ({Object.keys(result.common_skills).length})
-              </h3>
-              <div className="space-y-2">
-                {Object.entries(result.common_skills).slice(0, 10).map(([skill, counts]) => (
-                  <div key={skill} className="p-3 bg-green-50 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-green-800">{skill}</span>
+          {/* Overall Scores */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className={`p-6 rounded-lg border-2 ${result.overall_winner === 'resume1' ? 'bg-green-50 border-green-500' : 'bg-gray-50 border-gray-300'}`}>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-bold text-gray-900">Resume 1</h3>
+                {result.overall_winner === 'resume1' && <Trophy className="text-green-600" size={24} />}
+              </div>
+              <div className="text-3xl font-bold text-gray-800">{result.resume1_overall_score.toFixed(1)}</div>
+              <div className="text-sm text-gray-600">{resumes[0]?.filename}</div>
+            </div>
+            <div className={`p-6 rounded-lg border-2 ${result.overall_winner === 'resume2' ? 'bg-green-50 border-green-500' : 'bg-gray-50 border-gray-300'}`}>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-bold text-gray-900">Resume 2</h3>
+                {result.overall_winner === 'resume2' && <Trophy className="text-green-600" size={24} />}
+              </div>
+              <div className="text-3xl font-bold text-gray-800">{result.resume2_overall_score.toFixed(1)}</div>
+              <div className="text-sm text-gray-600">{resumes[1]?.filename}</div>
+            </div>
+          </div>
+
+          {/* Detailed Comparisons */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">Detailed Comparison</h3>
+            <div className="space-y-3">
+              {result.comparisons.map((comp, idx) => (
+                <div key={idx} className="bg-white border rounded-lg p-4">
+                  <div className="font-semibold text-gray-900 mb-2 capitalize">
+                    {comp.aspect.replace('_', ' ')}
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 mb-2">
+                    <div className={`p-3 rounded ${comp.winner === 'resume1' ? 'bg-green-100 border-2 border-green-500' : 'bg-gray-100'}`}>
+                      <div className="text-sm text-gray-600">Resume 1</div>
+                      <div className="text-2xl font-bold text-gray-900">{comp.resume1_score.toFixed(1)}</div>
+                    </div>
+                    <div className={`p-3 rounded ${comp.winner === 'resume2' ? 'bg-green-100 border-2 border-green-500' : 'bg-gray-100'}`}>
+                      <div className="text-sm text-gray-600">Resume 2</div>
+                      <div className="text-2xl font-bold text-gray-900">{comp.resume2_score.toFixed(1)}</div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600">{comp.explanation}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Recommendations */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 className="font-bold text-blue-900 mb-2">Recommendations</h3>
+            <ul className="space-y-1">
+              {result.recommendations.map((rec, idx) => (
+                <li key={idx} className="text-sm text-blue-800">✓ {rec}</li>
+              ))}
+            </ul>
+          </div>
                       <span className="text-sm text-green-600">Found in {Object.values(counts).filter(c => c > 0).length} resumes</span>
                     </div>
                     <div className="grid grid-cols-{result.resumes.length} gap-2">

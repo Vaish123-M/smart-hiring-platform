@@ -10,8 +10,9 @@ import AnalyticsDashboard from './components/AnalyticsDashboard';
 import ResumeBuilder from './components/ResumeBuilder';
 import ResumeInsights from './components/ResumeInsights';
 import AIEnhancements from './components/AIEnhancements';
+import ResumeComparison from './components/ResumeComparison';
 import { uploadResume, extractSkillsFromResume } from './api/resumeApi';
-import { Settings, Home, History, DownloadCloud, RefreshCw, BookOpen, Lightbulb, Wand2 } from 'lucide-react';
+import { Settings, Home, History, DownloadCloud, RefreshCw, BookOpen, Lightbulb, Wand2, GitCompare } from 'lucide-react';
 import './index.css';
 
 function App() {
@@ -170,6 +171,17 @@ function App() {
                   AI Tools
                 </button>
               )}
+              <button
+                onClick={() => setCurrentPage('compare')}
+                className={`flex items-center px-4 py-2 rounded-lg transition ${
+                  currentPage === 'compare'
+                    ? 'bg-indigo-100 text-indigo-700 font-semibold'
+                    : 'text-gray-600 hover:text-indigo-600'
+                }`}
+              >
+                <GitCompare className="w-4 h-4 mr-2" />
+                Compare
+              </button>
               <button
                 onClick={() => setCurrentPage('dashboard')}
                 className={`flex items-center px-4 py-2 rounded-lg transition ${
@@ -335,6 +347,17 @@ function App() {
               resumeText={resumeText}
               jobDescription={showJDMatcher ? '' : ''}
             />
+          </div>
+        )}
+
+        {/* Resume Comparison Page */}
+        {currentPage === 'compare' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-800">Resume Comparison</h2>
+              <p className="text-gray-600 mt-1">Compare two resumes side-by-side to identify strengths and weaknesses</p>
+            </div>
+            <ResumeComparison />
           </div>
         )}
 
