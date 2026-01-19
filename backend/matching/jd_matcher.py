@@ -1,7 +1,9 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import re
+import io
 from typing import List, Dict
+import pdfplumber
 from .skills import TECH_SKILLS
 
 BOOST_KEYWORDS = [
@@ -153,3 +155,36 @@ def calculate_match_percentage(resume_text: str, job_description: str):
         "skill_gap_analysis": skill_gap_analysis,
         "experience_match": experience_match
     }
+
+
+def extract_text_from_upload(file) -> str:
+    """Extract text from an uploaded JD file (PDF or plain text)."""
+    filename = file.filename.lower()
+    content = file.file.read()
+
+    if filename.endswith('.txt'):
+        try:
+            return content.decode('utf-8', errors='ignore')
+        except Exception:
+            return content.decode('latin-1', errors='ignore')
+
+    if filename.endswith('.pdf'):
+        with pdfplumber.open(io.BytesIO(content)) as pdf:
+            pages = [page.extract_text() or '' for page in pdf.pages]
+            return '\n'.join(pages)
+
+    raise ValueError('Unsupported file type. Please upload PDF or TXT for the job description.')
+
+
+def fetch_text_from_url(url: str) -> str:
+    """Fetch JD text from a URL (basic HTTP GET)."""
+    import urllib.request
+
+    with urllib.request.urlopen(url) as response:
+        if response.status != 200:
+            raise ValueError('Could not fetch job description from URL')
+        data = response.read()
+        try:
+            return data.decode('utf-8', errors='ignore')
+        except Exception:
+            return data.decode('latin-1', errors='ignore')

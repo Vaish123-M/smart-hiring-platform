@@ -5,6 +5,8 @@ import ATSScoreDisplay from './components/ATSScoreDisplay';
 import SkillFilterSort from './components/SkillFilterSort';
 import ResumeExport from './components/ResumeExport';
 import ResumeDashboard from './components/ResumeDashboard';
+import JobMatcher from './components/JobMatcher';
+import AnalyticsDashboard from './components/AnalyticsDashboard';
 import { uploadResume, extractSkillsFromResume } from './api/resumeApi';
 import { Settings, Home, History, DownloadCloud, RefreshCw } from 'lucide-react';
 import './index.css';
@@ -17,6 +19,7 @@ function App() {
   const [resumeId, setResumeId] = useState('');
   const [error, setError] = useState('');
   const [filteredSkills, setFilteredSkills] = useState(null);
+  const [showJDMatcher, setShowJDMatcher] = useState(false);
 
   const handleUpload = async (file) => {
     try {
@@ -204,6 +207,19 @@ function App() {
               </button>
             </div>
 
+            {/* Optional JD-based ATS toggle */}
+            <div className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm">
+              <p className="text-sm text-gray-600">
+                Default analysis shows general ATS compatibility. Enable Job Description mode to match against a specific JD.
+              </p>
+              <button
+                onClick={() => setShowJDMatcher((v) => !v)}
+                className={`px-4 py-2 rounded-lg font-semibold transition ${showJDMatcher ? 'bg-purple-600 text-white hover:bg-purple-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                {showJDMatcher ? 'Disable JD Mode' : 'Use Job Description'}
+              </button>
+            </div>
+
             {/* ATS Score Card */}
             <ATSScoreDisplay 
               skills={skills} 
@@ -217,10 +233,15 @@ function App() {
             {/* Filtering & Sorting */}
             <SkillFilterSort skills={skills} onFilterApply={handleFilterApply} />
 
+            {/* Enhanced Analytics Dashboard */}
+            <AnalyticsDashboard skills={skills} />
+
             {/* Job Description Matcher */}
-            <div className="mt-8">
-              <JobMatcher resumeText={resumeText} />
-            </div>
+            {showJDMatcher && (
+              <div className="mt-8">
+                <JobMatcher resumeText={resumeText} />
+              </div>
+            )}
 
             {/* Export */}
             <ResumeExport 
