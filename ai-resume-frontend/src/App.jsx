@@ -7,8 +7,9 @@ import ResumeExport from './components/ResumeExport';
 import ResumeDashboard from './components/ResumeDashboard';
 import JobMatcher from './components/JobMatcher';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
+import ResumeBuilder from './components/ResumeBuilder';
 import { uploadResume, extractSkillsFromResume } from './api/resumeApi';
-import { Settings, Home, History, DownloadCloud, RefreshCw } from 'lucide-react';
+import { Settings, Home, History, DownloadCloud, RefreshCw, BookOpen } from 'lucide-react';
 import './index.css';
 
 function App() {
@@ -131,6 +132,17 @@ function App() {
                 </button>
               )}
               <button
+                onClick={() => setCurrentPage('builder')}
+                className={`flex items-center px-4 py-2 rounded-lg transition ${
+                  currentPage === 'builder' 
+                    ? 'bg-indigo-100 text-indigo-700 font-semibold' 
+                    : 'text-gray-600 hover:text-indigo-600'
+                }`}
+              >
+                <DownloadCloud className="w-4 h-4 mr-2" />
+                Builder
+              </button>
+              <button
                 onClick={() => setCurrentPage('dashboard')}
                 className={`flex items-center px-4 py-2 rounded-lg transition ${
                   currentPage === 'dashboard' 
@@ -141,6 +153,15 @@ function App() {
                 <History className="w-4 h-4 mr-2" />
                 History
               </button>
+              <a
+                href="http://localhost:8000/swagger"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center px-4 py-2 rounded-lg transition text-gray-600 hover:text-indigo-600 hover:bg-indigo-50"
+              >
+                <BookOpen className="w-4 h-4 mr-2" />
+                API Docs
+              </a>
             </div>
           </div>
         </div>
@@ -250,6 +271,19 @@ function App() {
               resumeText={resumeText}
               atsScore={calculateATSScore(skills)}
             />
+          </div>
+        )}
+
+        {/* Builder Page */}
+        {currentPage === 'builder' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-800">Resume Builder</h2>
+                <p className="text-gray-600 mt-1">Create an ATS-friendly resume, export to TXT/JSON.</p>
+              </div>
+            </div>
+            <ResumeBuilder />
           </div>
         )}
 
