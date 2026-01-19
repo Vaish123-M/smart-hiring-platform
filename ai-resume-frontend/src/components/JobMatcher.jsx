@@ -356,39 +356,3 @@ export default function JobMatcher({ resumeText }) {
     </div>
   );
 }
-                      <div className={`text-center p-4 rounded-lg ${matchResult.experience_match.meets_requirement ? 'bg-green-50' : 'bg-yellow-50'}`}>
-                        <p className="text-sm text-gray-600 mb-1">Status</p>
-                        <p className={`text-lg font-bold ${matchResult.experience_match.meets_requirement ? 'text-green-600' : 'text-yellow-600'}`}>
-                          {matchResult.experience_match.meets_requirement ? '✓ Meets' : `${matchResult.experience_match.gap_years} yr gap`}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Recommendations */}
-                {matchResult.recommendations.length > 0 && (
-                  <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                      <AlertCircle className="w-6 h-6 text-orange-600 mr-2" />
-                      Recommendations
-                    </h3>
-                    <ul className="space-y-3">
-                      {matchResult.recommendations.map((rec, index) => (
-                        <li key={index} className="flex items-start p-3 bg-orange-50 rounded-lg">
-                          <span className="flex-shrink-0 w-6 h-6 bg-orange-200 text-orange-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">
-                            {index + 1}
-                          </span>
-                          <span className="text-gray-700">{rec}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        );
-      };
-
-      export default JobMatcher;
