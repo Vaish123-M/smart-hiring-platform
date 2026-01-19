@@ -8,6 +8,9 @@ from auth.router import router as auth_router
 from resume.router import router as resume_router
 from matching.router import router as ats_router
 from analytics.router import router as analytics_router
+from insights.router import router as insights_router
+from ai_enhancements.router import router as ai_router
+from advanced_analytics.router import router as advanced_analytics_router
 
 app = FastAPI(title="Smart Hiring Platform", docs_url=None, redoc_url=None)
 
@@ -24,6 +27,9 @@ app.include_router(auth_router)
 app.include_router(resume_router)
 app.include_router(ats_router)
 app.include_router(analytics_router)
+app.include_router(insights_router)
+app.include_router(ai_router)
+app.include_router(advanced_analytics_router)
 
 # Define directories
 ai_frontend_dist = os.path.join(os.path.dirname(__file__), "../ai-resume-frontend/dist")

@@ -8,8 +8,10 @@ import ResumeDashboard from './components/ResumeDashboard';
 import JobMatcher from './components/JobMatcher';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import ResumeBuilder from './components/ResumeBuilder';
+import ResumeInsights from './components/ResumeInsights';
+import AIEnhancements from './components/AIEnhancements';
 import { uploadResume, extractSkillsFromResume } from './api/resumeApi';
-import { Settings, Home, History, DownloadCloud, RefreshCw, BookOpen } from 'lucide-react';
+import { Settings, Home, History, DownloadCloud, RefreshCw, BookOpen, Lightbulb, Wand2 } from 'lucide-react';
 import './index.css';
 
 function App() {
@@ -142,6 +144,32 @@ function App() {
                 <DownloadCloud className="w-4 h-4 mr-2" />
                 Builder
               </button>
+              {skills && (
+                <button
+                  onClick={() => setCurrentPage('insights')}
+                  className={`flex items-center px-4 py-2 rounded-lg transition ${
+                    currentPage === 'insights' 
+                      ? 'bg-indigo-100 text-indigo-700 font-semibold' 
+                      : 'text-gray-600 hover:text-indigo-600'
+                  }`}
+                >
+                  <Lightbulb className="w-4 h-4 mr-2" />
+                  Insights
+                </button>
+              )}
+              {skills && (
+                <button
+                  onClick={() => setCurrentPage('ai')}
+                  className={`flex items-center px-4 py-2 rounded-lg transition ${
+                    currentPage === 'ai'
+                      ? 'bg-indigo-100 text-indigo-700 font-semibold'
+                      : 'text-gray-600 hover:text-indigo-600'
+                  }`}
+                >
+                  <Wand2 className="w-4 h-4 mr-2" />
+                  AI Tools
+                </button>
+              )}
               <button
                 onClick={() => setCurrentPage('dashboard')}
                 className={`flex items-center px-4 py-2 rounded-lg transition ${
@@ -263,13 +291,49 @@ function App() {
                 <JobMatcher resumeText={resumeText} />
               </div>
             )}
-
             {/* Export */}
             <ResumeExport 
               filename={resumeFilename}
               skills={skills}
               resumeText={resumeText}
               atsScore={calculateATSScore(skills)}
+            />
+          </div>
+        )}
+
+        {/* Insights Page */}
+        {currentPage === 'insights' && resumeText && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-800">Resume Insights</h2>
+                <p className="text-gray-600 mt-1">Get keyword gaps, job role matching, and career path suggestions</p>
+              </div>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <p className="text-blue-800">
+                💡 <strong>Tip:</strong> Use the JobMatcher in the Analyze tab to compare against a specific job description for better insights.
+              </p>
+            </div>
+            <ResumeInsights 
+              resumeText={resumeText}
+              jobDescription={showJDMatcher ? '' : ''}
+            />
+          </div>
+        )}
+
+        {/* AI Enhancements Page */}
+        {currentPage === 'ai' && resumeText && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-800">AI-Powered Tools</h2>
+                <p className="text-gray-600 mt-1">Get improvement suggestions, generate cover letters, and prepare for interviews</p>
+              </div>
+            </div>
+            <AIEnhancements
+              resumeText={resumeText}
+              jobDescription={showJDMatcher ? '' : ''}
             />
           </div>
         )}
