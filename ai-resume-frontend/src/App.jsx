@@ -7,8 +7,9 @@ import ResumeExport from './components/ResumeExport';
 import ResumeDashboard from './components/ResumeDashboard';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import ResumeBuilder from './components/ResumeBuilder';
+import JobMatchAnalyzer from './components/JobMatchAnalyzer';
 import { uploadResume, extractSkillsFromResume } from './api/resumeApi';
-import { Settings, Home, History, DownloadCloud, RefreshCw, BookOpen } from 'lucide-react';
+import { Settings, Home, History, DownloadCloud, RefreshCw, BookOpen, Target } from 'lucide-react';
 import './index.css';
 
 function App() {
@@ -140,42 +141,16 @@ function App() {
                 <DownloadCloud className="w-4 h-4 mr-2" />
                 Builder
               </button>
-              {skills && (
-                <button
-                  onClick={() => setCurrentPage('insights')}
-                  className={`flex items-center px-4 py-2 rounded-lg transition ${
-                    currentPage === 'insights' 
-                      ? 'bg-indigo-100 text-indigo-700 font-semibold' 
-                      : 'text-gray-600 hover:text-indigo-600'
-                  }`}
-                >
-                  <Lightbulb className="w-4 h-4 mr-2" />
-                  Insights
-                </button>
-              )}
-              {skills && (
-                <button
-                  onClick={() => setCurrentPage('ai')}
-                  className={`flex items-center px-4 py-2 rounded-lg transition ${
-                    currentPage === 'ai'
-                      ? 'bg-indigo-100 text-indigo-700 font-semibold'
-                      : 'text-gray-600 hover:text-indigo-600'
-                  }`}
-                >
-                  <Wand2 className="w-4 h-4 mr-2" />
-                  AI Tools
-                </button>
-              )}
               <button
-                onClick={() => setCurrentPage('compare')}
+                onClick={() => setCurrentPage('jobmatch')}
                 className={`flex items-center px-4 py-2 rounded-lg transition ${
-                  currentPage === 'compare'
+                  currentPage === 'jobmatch'
                     ? 'bg-indigo-100 text-indigo-700 font-semibold'
                     : 'text-gray-600 hover:text-indigo-600'
                 }`}
               >
-                <GitCompare className="w-4 h-4 mr-2" />
-                Compare
+                <Target className="w-4 h-4 mr-2" />
+                Job Match
               </button>
               <button
                 onClick={() => setCurrentPage('dashboard')}
@@ -266,10 +241,6 @@ function App() {
             {/* Optional JD-based ATS toggle */}
             <div className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm">
               <p className="text-sm text-gray-600">
-                Default analysis shows general ATS compatibility. Enable Job Description mode to match against a specific JD.
-            {/* Optional JD-based ATS toggle */}
-            <div className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm">
-              <p className="text-sm text-gray-600">
                 This resume has been analyzed successfully.
               </p>
             </div>
@@ -301,19 +272,15 @@ function App() {
         )}
 
         {/* Insights Page */}
-        {currentPage === 'insights' && resumeText && (
+        {currentPage === 'jobmatch' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-3xl font-bold text-gray-800">Resume Insights</h2>
-                <p className="text-gray-600 mt-1">Get keyword gaps, job role matching, and career path suggestions</p>
+                <h2 className="text-3xl font-bold text-gray-800">Job Match Analyzer</h2>
+                <p className="text-gray-600 mt-1">Paste or upload a job description and your resume to see ATS match insights.</p>
               </div>
             </div>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-              <p className="text-blue-800">
-                💡 <strong>Tip:</strong> Upload another resume to compare and get insights.
-              </p>
-            </div>
+            <JobMatchAnalyzer />
           </div>
         )}
 

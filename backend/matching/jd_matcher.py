@@ -4,6 +4,7 @@ import re
 import io
 from typing import List, Dict
 import pdfplumber
+from docx import Document
 from .skills import TECH_SKILLS
 
 BOOST_KEYWORDS = [
@@ -157,23 +158,38 @@ def calculate_match_percentage(resume_text: str, job_description: str):
     }
 
 
-def extract_text_from_upload(file) -> str:
-    """Extract text from an uploaded JD file (PDF or plain text)."""
-    filename = file.filename.lower()
-    content = file.file.read()
+def _extract_text_from_bytes(content: bytes, filename: str) -> str:
+    """Extract text from raw bytes for PDF, DOCX, or TXT."""
+    lower_name = filename.lower()
 
-    if filename.endswith('.txt'):
+    if lower_name.endswith('.txt'):
         try:
             return content.decode('utf-8', errors='ignore')
         except Exception:
             return content.decode('latin-1', errors='ignore')
 
-    if filename.endswith('.pdf'):
+    if lower_name.endswith('.pdf'):
         with pdfplumber.open(io.BytesIO(content)) as pdf:
             pages = [page.extract_text() or '' for page in pdf.pages]
             return '\n'.join(pages)
 
-    raise ValueError('Unsupported file type. Please upload PDF or TXT for the job description.')
+    if lower_name.endswith('.docx'):
+        document = Document(io.BytesIO(content))
+        return '\n'.join([p.text for p in document.paragraphs])
+
+    raise ValueError('Unsupported file type. Please upload PDF, DOCX, or TXT.')
+
+
+def extract_text_from_upload(file) -> str:
+    """Extract text from an uploaded JD file (PDF/DOCX/TXT)."""
+    content = file.file.read()
+    return _extract_text_from_bytes(content, file.filename)
+
+
+def extract_text_from_resume_upload(file) -> str:
+    """Extract text from an uploaded resume file (PDF/DOCX/TXT)."""
+    content = file.file.read()
+    return _extract_text_from_bytes(content, file.filename)
 
 
 def fetch_text_from_url(url: str) -> str:
