@@ -5,15 +5,10 @@ import ATSScoreDisplay from './components/ATSScoreDisplay';
 import SkillFilterSort from './components/SkillFilterSort';
 import ResumeExport from './components/ResumeExport';
 import ResumeDashboard from './components/ResumeDashboard';
-import JobMatcher from './components/JobMatcher';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import ResumeBuilder from './components/ResumeBuilder';
-import ResumeInsights from './components/ResumeInsights';
-import AIEnhancements from './components/AIEnhancements';
-import ResumeComparison from './components/ResumeComparison';
-import ATSAnalyzer from './components/ATSAnalyzer';
 import { uploadResume, extractSkillsFromResume } from './api/resumeApi';
-import { Settings, Home, History, DownloadCloud, RefreshCw, BookOpen, Lightbulb, Wand2, GitCompare, Zap } from 'lucide-react';
+import { Settings, Home, History, DownloadCloud, RefreshCw, BookOpen } from 'lucide-react';
 import './index.css';
 
 function App() {
@@ -24,7 +19,6 @@ function App() {
   const [resumeId, setResumeId] = useState('');
   const [error, setError] = useState('');
   const [filteredSkills, setFilteredSkills] = useState(null);
-  const [showJDMatcher, setShowJDMatcher] = useState(false);
 
   const handleUpload = async (file) => {
     try {
@@ -135,17 +129,6 @@ function App() {
                   Analyze
                 </button>
               )}
-              <button
-                onClick={() => setCurrentPage('ats')}
-                className={`flex items-center px-4 py-2 rounded-lg transition ${
-                  currentPage === 'ats' 
-                    ? 'bg-indigo-100 text-indigo-700 font-semibold' 
-                    : 'text-gray-600 hover:text-indigo-600'
-                }`}
-              >
-                <Zap className="w-4 h-4 mr-2" />
-                ATS Score
-              </button>
               <button
                 onClick={() => setCurrentPage('builder')}
                 className={`flex items-center px-4 py-2 rounded-lg transition ${
@@ -284,13 +267,11 @@ function App() {
             <div className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm">
               <p className="text-sm text-gray-600">
                 Default analysis shows general ATS compatibility. Enable Job Description mode to match against a specific JD.
+            {/* Optional JD-based ATS toggle */}
+            <div className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm">
+              <p className="text-sm text-gray-600">
+                This resume has been analyzed successfully.
               </p>
-              <button
-                onClick={() => setShowJDMatcher((v) => !v)}
-                className={`px-4 py-2 rounded-lg font-semibold transition ${showJDMatcher ? 'bg-purple-600 text-white hover:bg-purple-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              >
-                {showJDMatcher ? 'Disable JD Mode' : 'Use Job Description'}
-              </button>
             </div>
 
             {/* ATS Score Card */}
@@ -309,12 +290,6 @@ function App() {
             {/* Enhanced Analytics Dashboard */}
             <AnalyticsDashboard skills={skills} />
 
-            {/* Job Description Matcher */}
-            {showJDMatcher && (
-              <div className="mt-8">
-                <JobMatcher resumeText={resumeText} />
-              </div>
-            )}
             {/* Export */}
             <ResumeExport 
               filename={resumeFilename}
@@ -336,51 +311,9 @@ function App() {
             </div>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
               <p className="text-blue-800">
-                💡 <strong>Tip:</strong> Use the JobMatcher in the Analyze tab to compare against a specific job description for better insights.
+                💡 <strong>Tip:</strong> Upload another resume to compare and get insights.
               </p>
             </div>
-            <ResumeInsights 
-              resumeText={resumeText}
-              jobDescription={showJDMatcher ? '' : ''}
-            />
-          </div>
-        )}
-
-        {/* AI Enhancements Page */}
-        {currentPage === 'ai' && resumeText && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-800">AI-Powered Tools</h2>
-                <p className="text-gray-600 mt-1">Get improvement suggestions, generate cover letters, and prepare for interviews</p>
-              </div>
-            </div>
-            <AIEnhancements
-              resumeText={resumeText}
-              jobDescription={showJDMatcher ? '' : ''}
-            />
-          </div>
-        )}
-
-        {/* Resume Comparison Page */}
-        {currentPage === 'compare' && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-800">Resume Comparison</h2>
-              <p className="text-gray-600 mt-1">Compare two resumes side-by-side to identify strengths and weaknesses</p>
-            </div>
-            <ResumeComparison />
-          </div>
-        )}
-
-        {/* ATS Analyzer Page */}
-        {currentPage === 'ats' && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-800">ATS Score Analyzer</h2>
-              <p className="text-gray-600 mt-1">Upload your resume and job description side-by-side to get an instant ATS score analysis</p>
-            </div>
-            <ATSAnalyzer />
           </div>
         )}
 
