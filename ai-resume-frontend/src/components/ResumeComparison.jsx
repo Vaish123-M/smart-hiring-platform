@@ -191,23 +191,6 @@ export default function ResumeComparison() {
               ))}
             </ul>
           </div>
-                      <span className="text-sm text-green-600">Found in {Object.values(counts).filter(c => c > 0).length} resumes</span>
-                    </div>
-                    <div className="grid grid-cols-{result.resumes.length} gap-2">
-                      {result.resumes.map((_, idx) => (
-                        <div key={idx} className="text-center text-sm">
-                          <p className="text-gray-600">Resume {idx + 1}</p>
-                          <p className={`font-bold ${counts[`resume_${idx}`] > 0 ? 'text-green-600' : 'text-gray-400'}`}>
-                            ×{counts[`resume_${idx}`]}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Unique Skills */}
           {Object.keys(result.unique_skills).length > 0 && (
