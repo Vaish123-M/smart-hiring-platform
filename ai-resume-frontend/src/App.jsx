@@ -163,15 +163,6 @@ function App() {
                 <History className="w-4 h-4 mr-2" />
                 History
               </button>
-              <a
-                href="http://localhost:8000/swagger"
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center px-4 py-2 rounded-lg transition text-gray-600 hover:text-indigo-600 hover:bg-indigo-50"
-              >
-                <BookOpen className="w-4 h-4 mr-2" />
-                API Docs
-              </a>
             </div>
           </div>
         </div>

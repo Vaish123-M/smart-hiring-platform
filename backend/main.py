@@ -48,29 +48,32 @@ if os.path.exists(ai_frontend_dist):
     if os.path.exists(assets_dir):
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
-# Mount static assets for swagger/docs
+# Mount static assets (used by frontend; includes swagger css but docs are disabled by default)
 if os.path.exists(swagger_static_dir):
     app.mount("/static", StaticFiles(directory=swagger_static_dir), name="static")
 
-@app.get("/swagger", include_in_schema=False)
-async def custom_swagger_ui():
-    """Swagger UI (kept for reference)"""
-    return get_swagger_ui_html(
-        openapi_url=app.openapi_url,
-        title="Smart Hiring Platform API Docs",
-        swagger_js_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js",
-        swagger_css_url="/static/swagger-custom.css",
-        swagger_favicon_url="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f4bc.svg",
-    )
+# Enable API docs only when explicitly opted-in
+ENABLE_API_DOCS = os.getenv("ENABLE_API_DOCS", "").lower() == "true"
 
+if ENABLE_API_DOCS:
+    @app.get("/swagger", include_in_schema=False)
+    async def custom_swagger_ui():
+        """Swagger UI (enabled only when ENABLE_API_DOCS=true)"""
+        return get_swagger_ui_html(
+            openapi_url=app.openapi_url,
+            title="Smart Hiring Platform API Docs",
+            swagger_js_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js",
+            swagger_css_url="/static/swagger-custom.css",
+            swagger_favicon_url="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f4bc.svg",
+        )
 
-@app.get("/docs", include_in_schema=False)
-async def marketing_docs():
-    """Serve custom React+Tailwind docs landing page"""
-    docs_index = os.path.join(swagger_static_dir, "docs", "index.html")
-    if os.path.exists(docs_index):
-        return FileResponse(docs_index)
-    return {"message": "Docs UI not found"}
+    @app.get("/docs", include_in_schema=False)
+    async def marketing_docs():
+        """Serve custom docs landing page (enabled only when ENABLE_API_DOCS=true)"""
+        docs_index = os.path.join(swagger_static_dir, "docs", "index.html")
+        if os.path.exists(docs_index):
+            return FileResponse(docs_index)
+        return {"message": "Docs UI not found"}
 
 
 @app.get("/")
