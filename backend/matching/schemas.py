@@ -7,7 +7,9 @@ class ATSRequest(BaseModel):
 
 class ATSResponse(BaseModel):
     ats_score: float
-    matched_skills: list
+    matched_skills: List[str]
+    missing_skills: List[str]
+    total_jd_skills: int
 
 class JDMatchRequest(BaseModel):
     resume_text: str

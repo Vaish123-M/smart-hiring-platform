@@ -89,6 +89,13 @@ export default function ATSAnalyzer() {
         finalResumeText = await loadResumeFromFile();
       }
 
+      console.log('🔍 DEBUG: Analyzing with:', {
+        jdLength: finalJdText?.length,
+        resumeLength: finalResumeText?.length,
+        jdPreview: finalJdText?.substring(0, 100),
+        resumePreview: finalResumeText?.substring(0, 100)
+      });
+
       if (!finalJdText || !finalJdText.trim()) {
         throw new Error('Job description is empty');
       }
@@ -113,8 +120,10 @@ export default function ATSAnalyzer() {
       }
 
       const data = await response.json();
+      console.log('📊 ATS Result:', data);
       setResult(data);
     } catch (err) {
+      console.error('❌ Error:', err);
       setError(err.message || 'Failed to analyze. Please try again.');
     } finally {
       setLoading(false);

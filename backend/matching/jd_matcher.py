@@ -1,33 +1,12 @@
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-import re
 import io
+import re
 from typing import List, Dict
+
 import pdfplumber
 from docx import Document
-from .skills import TECH_SKILLS
 
-BOOST_KEYWORDS = [
-    "python", "docker", "aws", "fastapi", "backend"
-]
+from matching.ats_engine import calculate_ats_score
 
-def preprocess(text: str) -> str:
-    text = text.lower()
-    text = re.sub(r"[^a-zA-Z0-9 ]", " ", text)
-    return text
-
-def extract_skills_from_text(text: str) -> List[str]:
-    """Extract skills from text by matching against known skill list"""
-    text_lower = text.lower()
-    found_skills = []
-    
-    for skill in TECH_SKILLS:
-        # Use word boundaries to match whole words
-        pattern = r'\b' + re.escape(skill.lower()) + r'\b'
-        if re.search(pattern, text_lower):
-            found_skills.append(skill)
-    
-    return list(set(found_skills))
 
 def extract_experience_years(text: str) -> int:
     """Extract years of experience from text"""
@@ -44,117 +23,61 @@ def extract_experience_years(text: str) -> int:
     
     return 0
 
-def generate_recommendations(missing_skills: List[str], matched_skills: List[str]) -> List[str]:
-    """Generate actionable recommendations based on skill gaps"""
-    recommendations = []
-    
-    if len(missing_skills) > 0:
-        priority_skills = missing_skills[:5]  # Top 5 missing skills
-        recommendations.append(f"Focus on learning these priority skills: {', '.join(priority_skills)}")
-    
+
+def _simple_recommendations(missing_skills: List[str], matched_skills: List[str]) -> List[str]:
+    if not missing_skills:
+        return ["Great match! Your skills align well with the JD."]
+    recs = ["Focus on these missing skills to improve your match: " + ", ".join(missing_skills[:5])]
     if len(matched_skills) < 5:
-        recommendations.append("Expand your skill set to include more technologies mentioned in the job description")
-    
-    # Skill category analysis
-    frontend_skills = ["react", "angular", "vue", "html", "css", "javascript"]
-    backend_skills = ["python", "java", "node.js", "fastapi", "django", "spring boot"]
-    
-    has_frontend = any(skill in matched_skills for skill in frontend_skills)
-    has_backend = any(skill in matched_skills for skill in backend_skills)
-    
-    missing_frontend = [s for s in missing_skills if s in frontend_skills]
-    missing_backend = [s for s in missing_skills if s in backend_skills]
-    
-    if missing_frontend and len(missing_frontend) > 0:
-        recommendations.append(f"Consider strengthening frontend skills: {', '.join(missing_frontend[:3])}")
-    
-    if missing_backend and len(missing_backend) > 0:
-        recommendations.append(f"Consider strengthening backend skills: {', '.join(missing_backend[:3])}")
-    
-    if len(matched_skills) > 10:
-        recommendations.append("Great! You have a strong technical skill set matching this role")
-    
-    return recommendations
+        recs.append("Add more of the JD's required technologies to boost your score.")
+    return recs
+
 
 def calculate_match_percentage(resume_text: str, job_description: str):
-    """Enhanced JD matching with comprehensive analysis"""
-    resume_text_clean = preprocess(resume_text)
-    job_description_clean = preprocess(job_description)
-
-    documents = [resume_text_clean, job_description_clean]
-
-    vectorizer = TfidfVectorizer(
-        stop_words="english",
-        ngram_range=(1, 2),
-        min_df=1
-    )
-
-    tfidf_matrix = vectorizer.fit_transform(documents)
-
-    similarity = cosine_similarity(
-        tfidf_matrix[0:1],
-        tfidf_matrix[1:2]
-    )[0][0]
-
-    # Extract skills from both texts
-    resume_skills = extract_skills_from_text(resume_text)
-    jd_skills = extract_skills_from_text(job_description)
+    """Use the shared ATS pipeline to produce match stats for the existing endpoint."""
+    print(f"\n🔍 DEBUG: calculate_match_percentage called")
+    print(f"📄 Resume length: {len(resume_text)}")
+    print(f"📋 JD length: {len(job_description)}")
     
-    # Find matched and missing skills
-    matched_skills = list(set(resume_skills) & set(jd_skills))
-    missing_skills = list(set(jd_skills) - set(resume_skills))
+    # Ensure both texts go through identical cleaning and skill extraction
+    ats_result = calculate_ats_score(resume_text=resume_text, job_description=job_description)
     
-    # Calculate skill match bonus
-    skill_match_ratio = len(matched_skills) / len(jd_skills) if len(jd_skills) > 0 else 0
-    
-    # Extract experience
+    print(f"📊 ATS Result: {ats_result}")
+
+    matched_skills = ats_result["matched_skills"]
+    missing_skills = ats_result["missing_skills"]
+    total_jd_skills = ats_result["total_jd_skills"]
+
+    # Experience analysis retained (lightweight)
     resume_exp = extract_experience_years(resume_text)
     jd_exp = extract_experience_years(job_description)
-    
-    exp_match = True
-    exp_gap = 0
-    if jd_exp > 0:
-        exp_gap = max(0, jd_exp - resume_exp)
-        exp_match = resume_exp >= jd_exp
-    
-    # Calculate final score with weighted components
-    base_score = similarity * 0.6  # 60% weight to text similarity
-    skill_score = skill_match_ratio * 0.4  # 40% weight to skill matching
-    
-    final_score = min((base_score + skill_score) * 100, 100)
-    
-    # Generate recommendations
-    recommendations = generate_recommendations(missing_skills, matched_skills)
-    
-    # Skill gap analysis
+    exp_match = jd_exp == 0 or resume_exp >= jd_exp
+    exp_gap = 0 if exp_match else max(0, jd_exp - resume_exp)
+
+    # Basic skill gap analysis aligned to new scoring
     skill_gap_analysis = {
-        "total_required_skills": len(jd_skills),
+        "total_required_skills": total_jd_skills,
         "matched_count": len(matched_skills),
         "missing_count": len(missing_skills),
-        "match_ratio": round(skill_match_ratio * 100, 2),
-        "categories": {
-            "frontend": [s for s in matched_skills if s in ["react", "angular", "vue", "html", "css", "javascript"]],
-            "backend": [s for s in matched_skills if s in ["python", "java", "node.js", "fastapi", "django"]],
-            "cloud": [s for s in matched_skills if s in ["aws", "azure", "gcp", "docker", "kubernetes"]],
-            "database": [s for s in matched_skills if s in ["sql", "mongodb", "postgresql", "redis"]]
-        }
+        "match_ratio": ats_result["ats_score"],
+        "categories": {},
     }
-    
-    # Experience match analysis
+
     experience_match = {
         "resume_years": resume_exp,
         "required_years": jd_exp,
         "meets_requirement": exp_match,
-        "gap_years": exp_gap
+        "gap_years": exp_gap,
     }
 
     return {
-        "match_percentage": round(final_score, 2),
-        "matched_skills": sorted(matched_skills),
-        "missing_skills": sorted(missing_skills),
-        "recommendations": recommendations,
+        # Preserve existing field name for UI while aligning with ATS score
+        "match_percentage": ats_result["ats_score"],
+        "matched_skills": matched_skills,
+        "missing_skills": missing_skills,
+        "recommendations": _simple_recommendations(missing_skills, matched_skills),
         "skill_gap_analysis": skill_gap_analysis,
-        "experience_match": experience_match
+        "experience_match": experience_match,
     }
 
 
