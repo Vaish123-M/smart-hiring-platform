@@ -156,14 +156,14 @@ function App() {
         {/* Navigation */}
         <nav className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} shadow-sm sticky top-0 z-40 border-b`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
               <h1 
                 className={`text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition`}
                 onClick={() => handleReset()}
               >
                 📄 Smart Hiring Platform
               </h1>
-              <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="flex items-center space-x-2 sm:space-x-3 flex-wrap gap-y-2 justify-end">
                 <button
                   onClick={() => setCurrentPage('home')}
                   className={`flex items-center px-3 sm:px-4 py-2 rounded-lg transition ${
@@ -246,7 +246,7 @@ function App() {
         </nav>
 
         {/* Main Content */}
-        <main className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${darkMode ? 'text-gray-100' : ''}`}>
+        <main className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20 ${darkMode ? 'text-gray-100' : ''}`}>
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-start">
             <span className="mr-3">⚠️</span>
@@ -261,13 +261,13 @@ function App() {
         {currentPage === 'home' && (
           <>
             <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-gray-800 mb-4">Welcome to Smart Hiring</h2>
-              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-800 mb-4 leading-tight">Welcome to Smart Hiring</h2>
+              <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto">
                 Upload your resume to extract skills, calculate ATS score, and get insights instantly.
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6 mb-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
               <div className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition">
                 <div className="text-4xl mb-4">📊</div>
                 <h3 className="font-semibold text-gray-800 mb-2">Skill Analysis</h3>
@@ -306,85 +306,91 @@ function App() {
               </button>
             </div>
 
-            {/* Optional JD-based ATS toggle */}
-            <div className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-white rounded-lg p-4 shadow-sm">
               <p className="text-sm text-gray-600">
                 This resume has been analyzed successfully.
               </p>
+              <div className="text-xs text-gray-500">Optimized for ATS readability</div>
             </div>
 
-            {/* ATS Score Card */}
-            <ATSScoreDisplay 
-              skills={skills} 
-              filename={resumeFilename}
-              atsScore={calculateATSScore(skills)}
-            />
+            <div className="grid lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">
+                {/* ATS Score Card */}
+                <ATSScoreDisplay 
+                  skills={skills} 
+                  filename={resumeFilename}
+                  atsScore={calculateATSScore(skills)}
+                />
 
-            {/* Change Since Last Analysis */}
-            {analysisDelta?.previous && (
-              <div className={`rounded-lg border shadow-sm p-5 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-sm font-semibold text-indigo-600">Change since last upload</p>
-                    <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Progress snapshot</h3>
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Previous file retained locally
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-4">
-                  {[
-                    {
-                      label: 'Skill count',
-                      current: analysisDelta.current.skillCount,
-                      previous: analysisDelta.previous.skillCount,
-                    },
-                    {
-                      label: 'Total skill frequency',
-                      current: analysisDelta.current.totalFrequency,
-                      previous: analysisDelta.previous.totalFrequency,
-                    },
-                    {
-                      label: 'Resume text length',
-                      current: analysisDelta.current.textLength,
-                      previous: analysisDelta.previous.textLength,
-                    },
-                  ].map((item) => {
-                    const delta = item.current - item.previous;
-                    const deltaColor = delta > 0 ? 'text-green-600' : delta < 0 ? 'text-red-600' : 'text-gray-500';
-                    const deltaLabel = delta === 0 ? 'No change' : `${delta > 0 ? '+' : ''}${delta}`;
-                    return (
-                      <div key={item.label} className={`p-4 rounded-md border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'}`}>
-                        <p className="text-sm text-gray-500 dark:text-gray-300">{item.label}</p>
-                        <div className="flex items-baseline gap-2 mt-2">
-                          <span className="text-2xl font-bold text-gray-900 dark:text-gray-50">{item.current}</span>
-                          <span className={`text-sm font-semibold ${deltaColor}`}>{deltaLabel}</span>
-                        </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Prev: {item.previous}</p>
+                {/* Change Since Last Analysis */}
+                {analysisDelta?.previous && (
+                  <div className={`rounded-lg border shadow-sm p-5 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                    <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+                      <div>
+                        <p className="text-sm font-semibold text-indigo-600">Change since last upload</p>
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Progress snapshot</h3>
                       </div>
-                    );
-                  })}
-                </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Previous file retained locally
+                      </div>
+                    </div>
+
+                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      {[
+                        {
+                          label: 'Skill count',
+                          current: analysisDelta.current.skillCount,
+                          previous: analysisDelta.previous.skillCount,
+                        },
+                        {
+                          label: 'Total skill frequency',
+                          current: analysisDelta.current.totalFrequency,
+                          previous: analysisDelta.previous.totalFrequency,
+                        },
+                        {
+                          label: 'Resume text length',
+                          current: analysisDelta.current.textLength,
+                          previous: analysisDelta.previous.textLength,
+                        },
+                      ].map((item) => {
+                        const delta = item.current - item.previous;
+                        const deltaColor = delta > 0 ? 'text-green-600' : delta < 0 ? 'text-red-600' : 'text-gray-500';
+                        const deltaLabel = delta === 0 ? 'No change' : `${delta > 0 ? '+' : ''}${delta}`;
+                        return (
+                          <div key={item.label} className={`p-4 rounded-md border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'}`}>
+                            <p className="text-sm text-gray-500 dark:text-gray-300">{item.label}</p>
+                            <div className="flex items-baseline gap-2 mt-2">
+                              <span className="text-2xl font-bold text-gray-900 dark:text-gray-50">{item.current}</span>
+                              <span className={`text-sm font-semibold ${deltaColor}`}>{deltaLabel}</span>
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Prev: {item.previous}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Skills Display */}
+                <SkillDisplay skills={filteredSkills || skills} resumeFilename={resumeFilename} />
+
+                {/* Filtering & Sorting */}
+                <SkillFilterSort skills={skills} onFilterApply={handleFilterApply} />
+
+                {/* Enhanced Analytics Dashboard */}
+                <AnalyticsDashboard skills={skills} />
               </div>
-            )}
 
-            {/* Skills Display */}
-            <SkillDisplay skills={filteredSkills || skills} resumeFilename={resumeFilename} />
-
-            {/* Filtering & Sorting */}
-            <SkillFilterSort skills={skills} onFilterApply={handleFilterApply} />
-
-            {/* Enhanced Analytics Dashboard */}
-            <AnalyticsDashboard skills={skills} />
-
-            {/* Export */}
-            <ResumeExport 
-              filename={resumeFilename}
-              skills={skills}
-              resumeText={resumeText}
-              atsScore={calculateATSScore(skills)}
-            />
+              <div className="space-y-4">
+                {/* Export */}
+                <ResumeExport 
+                  filename={resumeFilename}
+                  skills={skills}
+                  resumeText={resumeText}
+                  atsScore={calculateATSScore(skills)}
+                />
+              </div>
+            </div>
           </div>
         )}
 
