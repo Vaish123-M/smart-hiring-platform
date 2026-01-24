@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertCircle, Loader, TrendingUp, CheckCircle, XCircle, Briefcase, Target, Link2, FileUp, Upload, Zap } from 'lucide-react';
+import { AlertCircle, Loader, TrendingUp, CheckCircle, XCircle, Briefcase, Target, Link2, FileUp, Upload, Zap, Download, Info, ChevronDown, ChevronUp, Moon, Sun } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8000';
 
@@ -19,8 +19,50 @@ export default function ATSAnalyzer() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
+  
+  // UI Enhancement states
+  const [darkMode, setDarkMode] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    matched: true,
+    missing: true,
+    recommendations: true,
+    experience: true
+  });
+  const [showTooltip, setShowTooltip] = useState(null);
 
   const resetErrors = () => setError('');
+
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const exportAsPDF = () => {
+    if (!result) return;
+    const content = `ATS ANALYSIS REPORT
+    
+Score: ${result.match_percentage}%
+Matched Skills: ${result.matched_skills.join(', ')}
+Missing Skills: ${result.missing_skills.join(', ')}
+Recommendations: ${result.recommendations.join('\n')}`;
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ats-analysis-report.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const Tooltip = ({ content, children }) => (
+    <div className="relative inline-block group">
+      {children}
+      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+        {content}
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+      </div>
+    </div>
+  );
 
   const loadJDFromFile = async () => {
     if (!jdFile) {
