@@ -8,8 +8,10 @@ import ResumeDashboard from './components/ResumeDashboard';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import ResumeBuilder from './components/ResumeBuilder';
 import JobMatchAnalyzer from './components/JobMatchAnalyzer';
+import { ToastContainer } from './components/ToastContainer';
+import { useToast } from './hooks/useToast';
 import { uploadResume, extractSkillsFromResume } from './api/resumeApi';
-import { Settings, Home, History, DownloadCloud, RefreshCw, BookOpen, Target } from 'lucide-react';
+import { Settings, Home, History, DownloadCloud, RefreshCw, Target, Moon, Sun } from 'lucide-react';
 import './index.css';
 
 function App() {
@@ -20,12 +22,46 @@ function App() {
   const [resumeId, setResumeId] = useState('');
   const [error, setError] = useState('');
   const [filteredSkills, setFilteredSkills] = useState(null);
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode');
+    return saved ? JSON.parse(saved) : false;
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const { toasts, removeToast, showSuccess, showError, showInfo } = useToast();
+
+  const { toasts, removeToast, showSuccess, showError, showInfo } = useToast();
+
+  // Persist dark mode setting
+  useEffect(() => {
+    localStorage.setItem('darkMode', JSON.stringify(darkMode));
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   const handleUpload = async (file) => {
     try {
       setError('');
       setSkills(null);
       setFilteredSkills(null);
+      setIsLoading(true);
+      
+      // File validation
+      if (!file) {
+        throw new Error('No file selected');
+      }
+      
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error('File size exceeds 10MB limit');
+      }
+      
+      if (!['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'].includes(file.type)) {
+        throw new Error('Invalid file type. Please upload PDF, DOCX, DOC, or TXT file');
+      }
+
+      showInfo('Processing your resume...');
       
       const uploadResponse = await uploadResume(file);
       const resumeTextData = uploadResponse.resume_text;
@@ -55,9 +91,13 @@ function App() {
       localStorage.setItem('resumeHistory', JSON.stringify(resumeHistory.slice(0, 20)));
 
       setCurrentPage('analyze');
+      showSuccess('Resume processed successfully!');
     } catch (err) {
       const errorMessage = err.response?.data?.detail || err.message || 'Failed to process resume';
       setError(errorMessage);
+      showError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -94,82 +134,102 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <h1 
-              className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition"
-              onClick={() => handleReset()}
-            >
-              📄 Smart Hiring Platform
-            </h1>
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={() => setCurrentPage('home')}
-                className={`flex items-center px-4 py-2 rounded-lg transition ${
-                  currentPage === 'home' 
-                    ? 'bg-indigo-100 text-indigo-700 font-semibold' 
-                    : 'text-gray-600 hover:text-indigo-600'
-                }`}
+    <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
+      <div className={`${darkMode ? 'bg-gray-900 text-white' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50'}`}>
+        {/* Navigation */}
+        <nav className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} shadow-sm sticky top-0 z-40 border-b`}>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <h1 
+                className={`text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition`}
+                onClick={() => handleReset()}
               >
-                <Home className="w-4 h-4 mr-2" />
-                Home
-              </button>
-              {skills && (
+                📄 Smart Hiring Platform
+              </h1>
+              <div className="flex items-center space-x-2 sm:space-x-3">
                 <button
-                  onClick={() => setCurrentPage('analyze')}
-                  className={`flex items-center px-4 py-2 rounded-lg transition ${
-                    currentPage === 'analyze' 
+                  onClick={() => setCurrentPage('home')}
+                  className={`flex items-center px-3 sm:px-4 py-2 rounded-lg transition ${
+                    currentPage === 'home' 
                       ? 'bg-indigo-100 text-indigo-700 font-semibold' 
-                      : 'text-gray-600 hover:text-indigo-600'
+                      : darkMode ? 'text-gray-300 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'
                   }`}
+                  title="Home"
                 >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Analyze
+                  <Home className="w-4 h-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Home</span>
                 </button>
-              )}
-              <button
-                onClick={() => setCurrentPage('builder')}
-                className={`flex items-center px-4 py-2 rounded-lg transition ${
-                  currentPage === 'builder' 
-                    ? 'bg-indigo-100 text-indigo-700 font-semibold' 
-                    : 'text-gray-600 hover:text-indigo-600'
-                }`}
-              >
-                <DownloadCloud className="w-4 h-4 mr-2" />
-                Builder
-              </button>
-              <button
-                onClick={() => setCurrentPage('jobmatch')}
-                className={`flex items-center px-4 py-2 rounded-lg transition ${
-                  currentPage === 'jobmatch'
-                    ? 'bg-indigo-100 text-indigo-700 font-semibold'
-                    : 'text-gray-600 hover:text-indigo-600'
-                }`}
-              >
-                <Target className="w-4 h-4 mr-2" />
-                Job Match
-              </button>
-              <button
-                onClick={() => setCurrentPage('dashboard')}
-                className={`flex items-center px-4 py-2 rounded-lg transition ${
-                  currentPage === 'dashboard' 
-                    ? 'bg-indigo-100 text-indigo-700 font-semibold' 
-                    : 'text-gray-600 hover:text-indigo-600'
-                }`}
-              >
-                <History className="w-4 h-4 mr-2" />
-                History
-              </button>
+                {skills && (
+                  <button
+                    onClick={() => setCurrentPage('analyze')}
+                    className={`flex items-center px-3 sm:px-4 py-2 rounded-lg transition ${
+                      currentPage === 'analyze' 
+                        ? 'bg-indigo-100 text-indigo-700 font-semibold' 
+                        : darkMode ? 'text-gray-300 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'
+                    }`}
+                    title="Analyze"
+                  >
+                    <Settings className="w-4 h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Analyze</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setCurrentPage('builder')}
+                  className={`flex items-center px-3 sm:px-4 py-2 rounded-lg transition ${
+                    currentPage === 'builder' 
+                      ? 'bg-indigo-100 text-indigo-700 font-semibold' 
+                      : darkMode ? 'text-gray-300 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'
+                  }`}
+                  title="Builder"
+                >
+                  <DownloadCloud className="w-4 h-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Builder</span>
+                </button>
+                <button
+                  onClick={() => setCurrentPage('jobmatch')}
+                  className={`flex items-center px-3 sm:px-4 py-2 rounded-lg transition ${
+                    currentPage === 'jobmatch'
+                      ? 'bg-indigo-100 text-indigo-700 font-semibold'
+                      : darkMode ? 'text-gray-300 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'
+                  }`}
+                  title="Job Match"
+                >
+                  <Target className="w-4 h-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Job Match</span>
+                </button>
+                <button
+                  onClick={() => setCurrentPage('dashboard')}
+                  className={`flex items-center px-3 sm:px-4 py-2 rounded-lg transition ${
+                    currentPage === 'dashboard' 
+                      ? 'bg-indigo-100 text-indigo-700 font-semibold' 
+                      : darkMode ? 'text-gray-300 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'
+                  }`}
+                  title="History"
+                >
+                  <History className="w-4 h-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">History</span>
+                </button>
+                
+                {/* Dark Mode Toggle */}
+                <button
+                  onClick={() => setDarkMode(!darkMode)}
+                  className={`flex items-center justify-center p-2 rounded-lg transition ${
+                    darkMode 
+                      ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                  title={darkMode ? 'Light mode' : 'Dark mode'}
+                  aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                >
+                  {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Main Content */}
+        <main className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${darkMode ? 'text-gray-100' : ''}`}>
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-start">
             <span className="mr-3">⚠️</span>
@@ -292,14 +352,21 @@ function App() {
         {currentPage === 'dashboard' && (
           <ResumeDashboard onSelectResume={handleSelectResume} />
         )}
-      </main>
+        </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-gray-600 text-sm">
-          Smart Hiring Platform © 2024 | Built with React & FastAPI
-        </div>
-      </footer>
+        {/* Footer */}
+        <footer className={`${darkMode ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-white border-t text-gray-600'} border-t mt-16`}>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="text-center text-sm space-y-2">
+              <p>Smart Hiring Platform © 2026 | Built with React & FastAPI</p>
+              <p className="text-xs opacity-75">📌 Your resume is analyzed locally and not permanently stored on our servers.</p>
+            </div>
+          </div>
+        </footer>
+      </div>
+
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }
