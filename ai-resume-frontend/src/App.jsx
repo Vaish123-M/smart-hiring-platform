@@ -29,8 +29,6 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const { toasts, removeToast, showSuccess, showError, showInfo } = useToast();
 
-  const { toasts, removeToast, showSuccess, showError, showInfo } = useToast();
-
   // Persist dark mode setting
   useEffect(() => {
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
