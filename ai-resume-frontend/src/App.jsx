@@ -27,6 +27,7 @@ function App() {
     return saved ? JSON.parse(saved) : false;
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [analysisDelta, setAnalysisDelta] = useState(null);
   const { toasts, removeToast, showSuccess, showError, showInfo } = useToast();
 
   // Persist dark mode setting
@@ -76,8 +77,26 @@ function App() {
       setSkills(skillsData);
       setFilteredSkills(skillsData);
 
-      // Save to localStorage
+      // Save to localStorage and compute delta vs previous analysis
       const resumeHistory = JSON.parse(localStorage.getItem('resumeHistory') || '[]');
+      const previousEntry = resumeHistory[0];
+
+      const summarize = (skillsObj, text) => {
+        const skillValues = skillsObj ? Object.values(skillsObj) : [];
+        const skillCount = skillsObj ? Object.keys(skillsObj).length : 0;
+        const totalFrequency = skillValues.reduce((a, b) => a + b, 0);
+        return {
+          skillCount,
+          totalFrequency,
+          textLength: text ? text.length : 0,
+        };
+      };
+
+      const currentSummary = summarize(skillsData, resumeTextData);
+      const previousSummary = previousEntry ? summarize(previousEntry.skills, previousEntry.text) : null;
+
+      setAnalysisDelta({ current: currentSummary, previous: previousSummary });
+
       resumeHistory.unshift({
         id: uploadResponse.resume_id,
         filename: uploadResponse.filename,
@@ -300,6 +319,55 @@ function App() {
               filename={resumeFilename}
               atsScore={calculateATSScore(skills)}
             />
+
+            {/* Change Since Last Analysis */}
+            {analysisDelta?.previous && (
+              <div className={`rounded-lg border shadow-sm p-5 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-sm font-semibold text-indigo-600">Change since last upload</p>
+                    <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Progress snapshot</h3>
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Previous file retained locally
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-4">
+                  {[
+                    {
+                      label: 'Skill count',
+                      current: analysisDelta.current.skillCount,
+                      previous: analysisDelta.previous.skillCount,
+                    },
+                    {
+                      label: 'Total skill frequency',
+                      current: analysisDelta.current.totalFrequency,
+                      previous: analysisDelta.previous.totalFrequency,
+                    },
+                    {
+                      label: 'Resume text length',
+                      current: analysisDelta.current.textLength,
+                      previous: analysisDelta.previous.textLength,
+                    },
+                  ].map((item) => {
+                    const delta = item.current - item.previous;
+                    const deltaColor = delta > 0 ? 'text-green-600' : delta < 0 ? 'text-red-600' : 'text-gray-500';
+                    const deltaLabel = delta === 0 ? 'No change' : `${delta > 0 ? '+' : ''}${delta}`;
+                    return (
+                      <div key={item.label} className={`p-4 rounded-md border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'}`}>
+                        <p className="text-sm text-gray-500 dark:text-gray-300">{item.label}</p>
+                        <div className="flex items-baseline gap-2 mt-2">
+                          <span className="text-2xl font-bold text-gray-900 dark:text-gray-50">{item.current}</span>
+                          <span className={`text-sm font-semibold ${deltaColor}`}>{deltaLabel}</span>
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Prev: {item.previous}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Skills Display */}
             <SkillDisplay skills={filteredSkills || skills} resumeFilename={resumeFilename} />
