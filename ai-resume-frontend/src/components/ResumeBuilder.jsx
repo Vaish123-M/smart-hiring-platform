@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Plus, Download, Copy, Trash2 } from 'lucide-react';
+import { CollapsibleSection } from './CollapsibleSection';
 
 const emptyExperience = { role: '', company: '', start: '', end: '', bullets: [''] };
 const emptyProject = { name: '', tech: '', summary: '' };
@@ -131,15 +132,15 @@ export default function ResumeBuilder() {
   };
 
   const sectionCard = (title, children) => (
-    <div className="bg-white rounded-xl shadow p-4 space-y-3 border border-gray-100">
+    <div className="bg-white rounded-xl shadow p-4 sm:p-5 space-y-3 border border-gray-100">
       <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
       {children}
     </div>
   );
 
   return (
-    <div className="grid lg:grid-cols-2 gap-6">
-      <div className="space-y-4">
+    <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
+      <div className="space-y-4 sm:space-y-5">
         {sectionCard('Profile', (
           <div className="grid md:grid-cols-2 gap-3">
             <input className="border rounded px-3 py-2" placeholder="Full Name" value={profile.name} onChange={(e) => handleProfileChange('name', e.target.value)} />
@@ -155,7 +156,7 @@ export default function ResumeBuilder() {
         {sectionCard('Experience', (
           <div className="space-y-4">
             {experience.map((exp, idx) => (
-              <div key={idx} className="border rounded p-3 space-y-3 relative">
+              <div key={idx} className="border rounded p-3 sm:p-4 space-y-3 relative">
                 {experience.length > 1 && (
                   <button
                     onClick={() => removeItem(setExperience, experience, idx)}
@@ -176,17 +177,17 @@ export default function ResumeBuilder() {
             ))}
             <button
               onClick={() => addItem(setExperience, emptyExperience)}
-              className="inline-flex items-center px-3 py-2 bg-indigo-50 text-indigo-700 rounded font-semibold"
+              className="inline-flex items-center px-3 py-2 bg-indigo-50 text-indigo-700 rounded font-semibold w-full sm:w-auto justify-center"
             >
               <Plus className="w-4 h-4 mr-1" /> Add Experience
             </button>
           </div>
         ))}
 
-        {sectionCard('Projects', (
+        <CollapsibleSection title="Projects" defaultOpen={false}>
           <div className="space-y-4">
             {projects.map((p, idx) => (
-              <div key={idx} className="border rounded p-3 space-y-2 relative">
+              <div key={idx} className="border rounded p-3 sm:p-4 space-y-2 relative">
                 {projects.length > 1 && (
                   <button
                     onClick={() => removeItem(setProjects, projects, idx)}
@@ -203,17 +204,17 @@ export default function ResumeBuilder() {
             ))}
             <button
               onClick={() => addItem(setProjects, emptyProject)}
-              className="inline-flex items-center px-3 py-2 bg-indigo-50 text-indigo-700 rounded font-semibold"
+              className="inline-flex items-center px-3 py-2 bg-indigo-50 text-indigo-700 rounded font-semibold w-full sm:w-auto justify-center"
             >
               <Plus className="w-4 h-4 mr-1" /> Add Project
             </button>
           </div>
-        ))}
+        </CollapsibleSection>
 
         {sectionCard('Education', (
           <div className="space-y-4">
             {education.map((ed, idx) => (
-              <div key={idx} className="border rounded p-3 space-y-2 relative">
+              <div key={idx} className="border rounded p-3 sm:p-4 space-y-2 relative">
                 {education.length > 1 && (
                   <button
                     onClick={() => removeItem(setEducation, education, idx)}
@@ -230,7 +231,7 @@ export default function ResumeBuilder() {
             ))}
             <button
               onClick={() => addItem(setEducation, emptyEducation)}
-              className="inline-flex items-center px-3 py-2 bg-indigo-50 text-indigo-700 rounded font-semibold"
+              className="inline-flex items-center px-3 py-2 bg-indigo-50 text-indigo-700 rounded font-semibold w-full sm:w-auto justify-center"
             >
               <Plus className="w-4 h-4 mr-1" /> Add Education
             </button>
@@ -238,27 +239,27 @@ export default function ResumeBuilder() {
         ))}
       </div>
 
-      <div className="space-y-4">
-        <div className="bg-white rounded-xl shadow p-4 space-y-3 border border-gray-100">
-          <div className="flex items-center justify-between">
+      <div className="space-y-4 sm:space-y-5">
+        <div className="bg-white rounded-xl shadow p-4 sm:p-5 space-y-3 border border-gray-100">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="text-lg font-semibold text-gray-800">Preview (plain text / ATS-friendly)</h3>
-            <div className="flex items-center gap-2">
-              <button onClick={copyText} className="inline-flex items-center px-3 py-2 bg-gray-100 text-gray-800 rounded font-semibold">
+            <div className="flex flex-wrap items-center gap-2">
+              <button onClick={copyText} className="inline-flex items-center px-3 py-2 bg-gray-100 text-gray-800 rounded font-semibold w-full sm:w-auto justify-center">
                 <Copy className="w-4 h-4 mr-1" /> Copy
               </button>
-              <button onClick={downloadText} className="inline-flex items-center px-3 py-2 bg-indigo-600 text-white rounded font-semibold">
+              <button onClick={downloadText} className="inline-flex items-center px-3 py-2 bg-indigo-600 text-white rounded font-semibold w-full sm:w-auto justify-center">
                 <Download className="w-4 h-4 mr-1" /> TXT
               </button>
-              <button onClick={downloadJSON} className="inline-flex items-center px-3 py-2 bg-purple-600 text-white rounded font-semibold">
+              <button onClick={downloadJSON} className="inline-flex items-center px-3 py-2 bg-purple-600 text-white rounded font-semibold w-full sm:w-auto justify-center">
                 <Download className="w-4 h-4 mr-1" /> JSON
               </button>
             </div>
           </div>
-          <pre className="bg-gray-50 border rounded p-3 text-sm whitespace-pre-wrap min-h-[300px]">{plainText || 'Start filling the form to see preview.'}</pre>
+          <pre className="bg-gray-50 border rounded p-3 text-sm whitespace-pre-wrap min-h-[260px] sm:min-h-[300px]">{plainText || 'Start filling the form to see preview.'}</pre>
           {status && <p className="text-sm text-green-600">{status}</p>}
         </div>
 
-        <div className="bg-white rounded-xl shadow p-4 space-y-2 border border-gray-100">
+        <div className="bg-white rounded-xl shadow p-4 sm:p-5 space-y-2 border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-800">Tips</h3>
           <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
             <li>Use metrics in bullets (impact, scale, latency, users, revenue).</li>

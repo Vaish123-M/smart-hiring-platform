@@ -9,9 +9,11 @@ import AnalyticsDashboard from './components/AnalyticsDashboard';
 import ResumeBuilder from './components/ResumeBuilder';
 import JobMatchAnalyzer from './components/JobMatchAnalyzer';
 import { ToastContainer } from './components/ToastContainer';
+import { CollapsibleSection } from './components/CollapsibleSection';
+import { ATSScoreVisualization } from './components/ATSScoreVisualization';
 import { useToast } from './hooks/useToast';
 import { uploadResume, extractSkillsFromResume } from './api/resumeApi';
-import { Settings, Home, History, DownloadCloud, RefreshCw, Target, Moon, Sun } from 'lucide-react';
+import { Settings, Home, History, DownloadCloud, RefreshCw, Target, Moon, Sun, Sparkles, BadgeCheck, FileText, LayoutGrid } from 'lucide-react';
 import './index.css';
 
 function App() {
@@ -127,6 +129,19 @@ function App() {
     return Math.min(10, (skillCount / 5 + avgFreq / 3) * 3);
   };
 
+  const getRecommendations = (skillsData, atsScoreValue) => {
+    if (!skillsData || typeof skillsData !== 'object') return [];
+    const skillCount = Object.keys(skillsData).length;
+    const avgFrequency = skillCount > 0
+      ? (Object.values(skillsData).reduce((a, b) => a + b, 0) / skillCount)
+      : 0;
+    const recs = [];
+    if (skillCount < 10) recs.push('Include more relevant technical skills');
+    if (avgFrequency < 2) recs.push('Mention key skills multiple times');
+    if (atsScoreValue < 7) recs.push('Add industry keywords to improve ATS compatibility');
+    return recs;
+  };
+
   const handleSelectResume = (resume) => {
     setResumeText(resume.text);
     setResumeFilename(resume.filename);
@@ -150,19 +165,31 @@ function App() {
     setCurrentPage('home');
   };
 
+  const skillCount = skills ? Object.keys(skills).length : 0;
+  const atsScoreValue = skills ? calculateATSScore(skills) : 0;
+  const recommendations = skills ? getRecommendations(skills, atsScoreValue) : [];
+  const targetSkillCount = Math.max(20, skillCount);
+
   return (
     <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
       <div className={`${darkMode ? 'bg-gray-900 text-white' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50'}`}>
         {/* Navigation */}
-        <nav className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} shadow-sm sticky top-0 z-40 border-b`}>
+        <nav className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} shadow-sm sticky top-0 z-40 border-b backdrop-blur`} aria-label="Primary">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between gap-3 flex-wrap">
-              <h1 
-                className={`text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition`}
+              <button
+                type="button"
                 onClick={() => handleReset()}
+                className="flex items-center gap-3 group"
+                aria-label="Go to Smart Hiring Platform home"
               >
-                📄 Smart Hiring Platform
-              </h1>
+                <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow ring-1 ring-indigo-100 overflow-hidden">
+                  <img src="/logo.svg" alt="Smart Hiring Platform" className="w-8 h-8" />
+                </span>
+                <span className={`text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent group-hover:opacity-80 transition`}>
+                  Smart Hiring Platform
+                </span>
+              </button>
               <div className="flex items-center space-x-2 sm:space-x-3 flex-wrap gap-y-2 justify-end">
                 <button
                   onClick={() => setCurrentPage('home')}
@@ -172,6 +199,7 @@ function App() {
                       : darkMode ? 'text-gray-300 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'
                   }`}
                   title="Home"
+                  aria-current={currentPage === 'home' ? 'page' : undefined}
                 >
                   <Home className="w-4 h-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">Home</span>
@@ -185,6 +213,7 @@ function App() {
                         : darkMode ? 'text-gray-300 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'
                     }`}
                     title="Analyze"
+                    aria-current={currentPage === 'analyze' ? 'page' : undefined}
                   >
                     <Settings className="w-4 h-4 mr-1 sm:mr-2" />
                     <span className="hidden sm:inline">Analyze</span>
@@ -198,6 +227,7 @@ function App() {
                       : darkMode ? 'text-gray-300 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'
                   }`}
                   title="Builder"
+                  aria-current={currentPage === 'builder' ? 'page' : undefined}
                 >
                   <DownloadCloud className="w-4 h-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">Builder</span>
@@ -210,6 +240,7 @@ function App() {
                       : darkMode ? 'text-gray-300 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'
                   }`}
                   title="Job Match"
+                  aria-current={currentPage === 'jobmatch' ? 'page' : undefined}
                 >
                   <Target className="w-4 h-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">Job Match</span>
@@ -222,6 +253,7 @@ function App() {
                       : darkMode ? 'text-gray-300 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'
                   }`}
                   title="History"
+                  aria-current={currentPage === 'dashboard' ? 'page' : undefined}
                 >
                   <History className="w-4 h-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">History</span>
@@ -306,6 +338,62 @@ function App() {
               </button>
             </div>
 
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div className="bg-white rounded-xl border border-indigo-100 shadow-sm p-4 sm:p-5 hover:shadow-md transition">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-indigo-600 uppercase tracking-widest">Resume Upload</p>
+                    <p className="text-lg font-semibold text-gray-800 mt-2 truncate">{resumeFilename}</p>
+                    <p className="text-xs text-gray-500 mt-1">Ready for ATS analysis</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-indigo-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-emerald-100 shadow-sm p-4 sm:p-5 hover:shadow-md transition">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-emerald-600 uppercase tracking-widest">ATS Score</p>
+                    <p className="text-3xl font-bold text-gray-800 mt-2">{atsScoreValue.toFixed(1)}/10</p>
+                    <div className="mt-2 w-full bg-emerald-100 rounded-full h-2">
+                      <div className="h-2 rounded-full bg-emerald-500" style={{ width: `${Math.min(100, (atsScoreValue / 10) * 100)}%` }} />
+                    </div>
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
+                    <BadgeCheck className="w-5 h-5 text-emerald-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-blue-100 shadow-sm p-4 sm:p-5 hover:shadow-md transition">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest">Skills Matched</p>
+                    <p className="text-3xl font-bold text-gray-800 mt-2">{skillCount}</p>
+                    <p className="text-xs text-gray-500 mt-1">Target {targetSkillCount} keywords</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <LayoutGrid className="w-5 h-5 text-blue-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-purple-100 shadow-sm p-4 sm:p-5 hover:shadow-md transition">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-purple-600 uppercase tracking-widest">Recommendations</p>
+                    <p className="text-3xl font-bold text-gray-800 mt-2">{recommendations.length || 1}</p>
+                    <p className="text-xs text-gray-500 mt-1">Actionable improvements</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-purple-600" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-white rounded-lg p-4 shadow-sm">
               <p className="text-sm text-gray-600">
                 This resume has been analyzed successfully.
@@ -313,13 +401,15 @@ function App() {
               <div className="text-xs text-gray-500">Optimized for ATS readability</div>
             </div>
 
+            <ATSScoreVisualization atsScore={Math.round((atsScoreValue / 10) * 100)} matchedSkills={skillCount} totalSkills={targetSkillCount} />
+
             <div className="grid lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
                 {/* ATS Score Card */}
                 <ATSScoreDisplay 
                   skills={skills} 
                   filename={resumeFilename}
-                  atsScore={calculateATSScore(skills)}
+                  atsScore={atsScoreValue}
                 />
 
                 {/* Change Since Last Analysis */}
@@ -372,13 +462,17 @@ function App() {
                 )}
 
                 {/* Skills Display */}
-                <SkillDisplay skills={filteredSkills || skills} resumeFilename={resumeFilename} />
+                <CollapsibleSection title="Skills" icon={LayoutGrid} count={skillCount}>
+                  <SkillDisplay skills={filteredSkills || skills} resumeFilename={resumeFilename} />
+                </CollapsibleSection>
 
                 {/* Filtering & Sorting */}
                 <SkillFilterSort skills={skills} onFilterApply={handleFilterApply} />
 
                 {/* Enhanced Analytics Dashboard */}
-                <AnalyticsDashboard skills={skills} />
+                <CollapsibleSection title="Recommendations" icon={Sparkles} defaultOpen={false}>
+                  <AnalyticsDashboard skills={skills} />
+                </CollapsibleSection>
               </div>
 
               <div className="space-y-4">
@@ -431,7 +525,14 @@ function App() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="text-center text-sm space-y-2">
               <p>Smart Hiring Platform © 2026 | Built with React & FastAPI</p>
-              <p className="text-xs opacity-75">📌 Your resume is analyzed locally and not permanently stored on our servers.</p>
+              <p className="text-xs opacity-75">
+                📌 Your resume is analyzed locally and not permanently stored on our servers.
+              </p>
+              <p className="text-xs">
+                <a href="/terms" className="text-indigo-600 hover:text-indigo-700 underline">Terms</a>
+                <span className="mx-2">•</span>
+                <a href="/privacy" className="text-indigo-600 hover:text-indigo-700 underline">Privacy Policy</a>
+              </p>
             </div>
           </div>
         </footer>
