@@ -1,0 +1,14 @@
+# Root-level only: exclude api/ so Vercel does not deploy it as a Serverless Function.
+# (ai-resume-frontend/src/api is the frontend API client and must be included.)
+/api
+!ai-resume-frontend/src/api
+# Exclude backend (FastAPI) - not used for this static frontend deploy.
+/backend
+# Exclude the other frontend app (root-level "frontend" folder only; ai-resume-frontend is kept).
+/frontend
+# Reduce upload size.
+/k8s
+/.github
+docker-compose.yml
+.env
+.vercel

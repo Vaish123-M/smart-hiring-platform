@@ -1,22 +1,13 @@
 {
-  "_comment": "Vercel config to deploy the Vite React frontend as a static site.",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "builds": [
+  "installCommand": "cd ai-resume-frontend && npm install",
+  "buildCommand": "cd ai-resume-frontend && npm run build",
+  "outputDirectory": "ai-resume-frontend/dist",
+  "rewrites": [
     {
-      "_comment": "Use Vercel's static build for the Vite app in ai-resume-frontend.",
-      "src": "ai-resume-frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "_comment": "Vite outputs to dist/ relative to its package.json.",
-        "distDir": "dist"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "_comment": "SPA rewrite so all routes serve index.html.",
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

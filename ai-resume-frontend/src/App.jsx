@@ -12,7 +12,7 @@ import { ToastContainer } from './components/ToastContainer';
 import { CollapsibleSection } from './components/CollapsibleSection';
 import { ATSScoreVisualization } from './components/ATSScoreVisualization';
 import { useToast } from './hooks/useToast';
-import { uploadResume, extractSkillsFromResume } from './api/resumeApi';
+import { uploadResume, extractSkillsFromResume } from './api/resumeApi.js';
 import { Settings, Home, History, DownloadCloud, RefreshCw, Target, Moon, Sun, Sparkles, BadgeCheck, FileText, LayoutGrid } from 'lucide-react';
 import './index.css';
 
